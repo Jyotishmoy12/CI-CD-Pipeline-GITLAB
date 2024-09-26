@@ -1,0 +1,84 @@
+This configuration defines a simple multi-stage pipeline with **build** and **test** stages. It simulates the process of "building a laptop" in the build stage and then verifies that the build process was successful in the test stage. Below is a detailed explanation of the **stages**, **artifacts**, and the **test** part, along with the intuition behind them.
+
+### **Stages**
+1. **Build Stage (`build-laptop`)**:
+   - **Purpose**: This stage simulates the construction of a "laptop" by creating a directory structure and a text file that records the components added during the build process.
+   - **Script Explanation**:
+     - `echo "building a laptop"`: Outputs a message that indicates the build process is starting.
+     - `mkdir build`: Creates a directory called `build` to hold the build artifacts (in this case, the "laptop components").
+     - `touch build/computer.txt`: Creates an empty file named `computer.txt` inside the `build` directory. This file will represent the components of the laptop.
+     - `echo "Mainboard" >> build/computer.txt`: Adds "Mainboard" to the `computer.txt` file, simulating the addition of a main component to the laptop.
+     - `cat build/computer.txt`: Displays the contents of the `computer.txt` file to ensure that the "Mainboard" has been added.
+     - `echo "Keyboard" >> build/computer.txt`: Adds "Keyboard" to the `computer.txt` file, representing another component.
+     - `cat build/computer.txt`: Displays the contents of the file again to confirm that both "Mainboard" and "Keyboard" have been added successfully.
+
+   **Intuition**: 
+   - The **build stage** is about creating something concrete (in this case, simulating a laptop). It's structured like a simple manufacturing process where each part is added step by step. At the end of this stage, the artifacts (in this case, the `build/computer.txt` file) will contain the list of components added to the "laptop."
+
+2. **Test Stage (`test-laptop`)**:
+   - **Purpose**: This stage verifies that the build process was successful by checking if the `computer.txt` file, created during the build stage, exists.
+   - **Script Explanation**:
+     - `test -f build/computer.txt`: This command checks if the `computer.txt` file exists in the `build` directory. If the file exists, the test passes; otherwise, it fails.
+
+   **Intuition**:
+   - The **test stage** is intended to confirm that the previous build stage worked as expected. In CI/CD pipelines, the **test** stage is crucial to ensure that the output (in this case, the "laptop" or its component list) was successfully generated and can be used in later stages. Here, it ensures that the `computer.txt` file, which represents the built laptop, exists.
+
+---
+
+### **Artifacts**
+- **Artifacts** are files or directories that are preserved after a stage completes, and they can be used by subsequent stages. In this case:
+  
+  ```yaml
+  artifacts:
+      paths:
+          - build
+  ```
+  
+  - **Artifacts Configuration**: This tells the pipeline to save the `build` directory (which contains `computer.txt`) after the **build-laptop** stage is done.
+  - **Intuition**: Artifacts act as a way to pass the results of one stage to the next. The `build` directory and its contents are saved so that they can be accessed in the **test-laptop** stage. Without artifacts, the `build` directory would not be available in the test stage, and the test would fail.
+
+### **Test Part**
+- The `test-laptop` stage runs a very basic test:
+  
+  ```bash
+  test -f build/computer.txt
+  ```
+  
+  - **Explanation**: This command checks if the file `build/computer.txt` exists. If the file is present, it indicates that the build stage successfully created the "laptop" (i.e., added components to the `computer.txt` file). If the file is missing, it implies that the build stage failed or the artifacts weren't passed correctly, causing the test to fail.
+  
+  **Intuition**:
+  - The test stage represents the quality check after building the product (here, a laptop). In the real world, the test would involve running various checks on the output of the build stage. In this pipeline, it ensures that the essential output file (`computer.txt`) exists, acting as a proxy for checking whether the "laptop" was correctly built.
+
+---
+
+### **Overall Intuition Behind the Pipeline**
+- **Build Stage**: Simulates the creation of a product (e.g., a laptop). In real-world pipelines, this stage would involve compiling code, packaging software, or preparing an application for deployment.
+- **Artifacts**: Enable the passing of data (build outputs) from one stage to another. Without artifacts, stages wouldn't be able to share results, and the pipeline would fail at the test stage.
+- **Test Stage**: Verifies that the build was successful. In complex pipelines, this stage could run unit tests, integration tests, or other validation scripts.
+
+The build and test stages in a CI/CD pipeline ensure that the software (or product) is built and verified before it's deployed or used.
+
+
+stages:
+    - build
+    - test
+
+build-laptop:
+    image: alpine
+    stage: build
+    script: 
+        - echo "building a laptop"
+        - mkdir build
+        - touch build/computer.txt
+        - echo "Mainboard" >> build/computer.txt
+        - cat build/computer.txt
+        - echo "Keyboard" >> build/computer.txt
+        - cat build/computer.txt
+    artifacts: 
+        paths: 
+            - build
+test laptop:
+    image: alpine
+    stage: test
+    script: 
+        - test -f build/computer.txt
