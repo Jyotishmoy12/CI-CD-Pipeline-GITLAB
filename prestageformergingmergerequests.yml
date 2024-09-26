@@ -1,0 +1,32 @@
+stages:
+    - .pre
+    - build
+    - test
+build website:
+    image: node:22-alpine
+    stage: build
+    script:
+        - yarn install
+        - yarn build
+    artifacts: 
+        paths: 
+            - build
+linter:
+    image: node:22-alpine
+    stage: .pre
+    script:
+        - yarn install
+        - yarn lint
+
+test website:
+    image: node:22-alpine
+    stage: test
+    script: 
+        - test -f build/index.html
+
+unit tests:
+    image: node:22-alpine
+    stage: .pre
+    script:
+        - yarn install
+        - yarn test
