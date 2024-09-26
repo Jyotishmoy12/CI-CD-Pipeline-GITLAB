@@ -1,0 +1,17 @@
+person: 
+  name: John
+  age: 23
+  hobbies:
+    - sports
+    - youtube
+    - hiking
+  address:
+    street: 123 Mayfield
+    city: NewYork
+    zip: 10003
+  experience: 
+    - title: Junior Dev
+      period: 2000-2005
+    - title: Senior dev
+      period: since 2005
+      
