@@ -1,0 +1,67 @@
+stages:
+    - .pre
+    - build
+    - test
+build website:
+    image: node:22-alpine
+    stage: build
+    script:
+        - yarn install
+        - yarn build
+    artifacts: 
+        paths: 
+            - build
+linter:
+    image: node:22-alpine
+    stage: .pre
+    script:
+        - yarn install
+        - yarn lint
+
+test website:
+    image: node:22-alpine
+    stage: test
+    script: 
+        # - test -f build/index.html
+        - yarn global add serve
+        - apk add curl
+        #fixing the error to stop the server to run forever
+        - serve -s build &
+        - sleep 10
+        - curl http://localhost:3000 | grep "React App"
+
+
+unit tests:
+    image: node:22-alpine
+    stage: .pre
+    script:
+        - yarn install
+        - yarn test
+
+
+
+1. image: node:22-alpine
+This uses a Node.js environment (version 22) built on the Alpine Linux distribution, which is lightweight and minimal, ensuring quick downloads and setup during the CI process.
+
+2. Commands Breakdown
+
+# - test -f build/index.html
+This line is commented out but might have been an initial check to verify that the build/index.html file exists. The -f flag in the test command checks if a file is present.
+
+yarn global add serve
+This installs the serve package globally using yarn. The serve package is a simple static file server used to serve the built files from the build directory.
+
+apk add curl
+Installs the curl command-line tool using apk, which is the package manager for Alpine Linux. curl will be used later to make HTTP requests to the server.
+
+serve -s build &
+This command starts the static server using the serve tool, serving the contents of the build directory (the static website). The -s flag is for "single-page application" mode, 
+which ensures that the server will always return index.html for unknown paths (a common setup for React apps).
+The & at the end runs the serve command in the background, allowing the pipeline to continue executing the next commands without waiting for the server to terminate.
+
+sleep 10
+Introduces a 10-second delay to give the static server (serve) time to start up. Without this, the following commands might execute before the server is ready, causing failures.
+
+curl http://localhost:3000 | grep "React App"
+This sends an HTTP request to localhost:3000 (where the serve server is running) and looks for the phrase "React App" in the response.
+curl fetches the HTML content from the running server, and grep is used to search for the specific text "React App", which is usually part of the default content for a React application. This ensures that the server is running and serving the correct content.
