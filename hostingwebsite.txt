@@ -1,0 +1,25 @@
+Lesson 9 - Hosting a website on S3
+
+files in the S3 bucket are not publicly available
+to get the website to work, we need to configure the bucket
+from the bucket, click on Properties and enable Static website hosting
+from the bucket, click on the Permissions tab and disable Block public access
+
+from the bucket, click on the Permissions tab and set a bucket policy
+
+
+Policy example:
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicRead",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*"
+        }
+    ]
+}
