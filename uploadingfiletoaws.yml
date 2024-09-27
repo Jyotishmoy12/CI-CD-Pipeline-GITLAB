@@ -1,0 +1,70 @@
+stages:
+    - build
+    - test
+    - deploy
+.build website:
+    image: node:22-alpine
+    stage: build
+    script:
+        - yarn install
+        - yarn lint
+        - yarn test
+        - yarn build
+    artifacts: 
+        paths: 
+            - build
+
+.test website:
+    image: node:22-alpine
+    stage: test
+    script: 
+        # - test -f build/index.html
+        - yarn global add serve
+        - apk add curl
+        #fixing the error to stop the server to run forever
+        - serve -s build &
+        - sleep 10
+        - curl http://localhost:3000 | grep "React App"
+
+deploy to s3:
+    stage: deploy
+    image: 
+        name: amazon/aws-cli:2.4.11
+        entrypoint: [""]
+    script:
+        - aws --version
+        - echo "hello s3" > test.txt
+        - aws s3 cp test.txt s3://$AWS_S3_BUCKET/test.txt
+
+
+The deploy to s3 part of the CI/CD pipeline uploads a file to an S3 bucket using the AWS CLI. Here's a detailed breakdown of each part of the deploy to s3 stage:
+
+1. Stage Declaration (stage: deploy)
+This declares that the current job belongs to the deploy stage. In the larger pipeline, deploy happens after the build and test stages, ensuring the website is built and tested before deploying.
+
+2. Docker Image Setup
+
+image: 
+    name: amazon/aws-cli:2.4.11
+    entrypoint: [""]
+Image: The pipeline uses the amazon/aws-cli:2.4.11 Docker image, which comes pre-installed with AWS CLI v2.4.11. This is the tool that allows you to interact with AWS services like S3.
+Entrypoint: The entrypoint: [""] overrides any default entrypoint for the Docker image. This ensures the script will run as expected and not be overridden by any default behavior in the AWS CLI image.
+
+3. Script Section
+
+script:
+    - aws --version
+    - echo "hello s3" > test.txt
+    - aws s3 cp test.txt s3://$AWS_S3_BUCKET/test.txt
+Each command in the script section will be executed in the order provided:
+
+aws --version:
+This command checks the installed AWS CLI version to confirm the CLI is properly set up and to log its version in the pipeline output for debugging purposes.
+
+echo "hello s3" > test.txt:
+This command creates a text file called test.txt with the content hello s3. This file is generated just for testing the upload to S3. In a real deployment, you would typically upload your build artifacts (e.g., HTML, CSS, JavaScript files) rather than a simple text file.
+
+aws s3 cp test.txt s3://$AWS_S3_BUCKET/test.txt:
+This command uploads the generated test.txt file to an S3 bucket. The bucket name is stored in the environment variable AWS_S3_BUCKET, which should be configured in your CI/CD environment.
+The command aws s3 cp is a straightforward copy command from the AWS CLI that copies files to an S3 bucket.
+s3://$AWS_S3_BUCKET/test.txt specifies the target bucket and file path in S3.
