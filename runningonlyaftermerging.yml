@@ -1,0 +1,45 @@
+stages:
+    - build
+    - test
+    - deploy
+build website:
+    image: node:22-alpine
+    stage: build
+    script:
+        - yarn install
+        - yarn lint
+        - yarn test
+        - yarn build
+    artifacts: 
+        paths: 
+            - build
+
+test website:
+    image: node:22-alpine
+    stage: test
+    script: 
+        # - test -f build/index.html
+        - yarn global add serve
+        - apk add curl
+        #fixing the error to stop the server to run forever
+        - serve -s build &
+        - sleep 10
+        - curl http://localhost:3000 | grep "React App"
+
+deploy to s3:
+    stage: deploy
+    image: 
+        name: amazon/aws-cli:2.4.11
+        entrypoint: [""]
+    rules:
+        - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    script:
+        - aws --version
+        - echo $CI_COMMIT_REF_NAME 
+        - echo $CI_DEFAULT_BRANCH
+        - aws s3 sync build s3://$AWS_S3_BUCKET --delete
+
+
+Conditional Deployment: This section introduces conditional rules. The job will only run if the condition $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH is true, meaning the pipeline will deploy to S3 only if the code is pushed to the default branch (usually main or master).
+$CI_COMMIT_REF_NAME: Refers to the branch name where the current commit originates.
+$CI_DEFAULT_BRANCH: Refers to the repository's default branch (often main or master), and it's automatically set by the CI/CD system.
