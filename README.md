@@ -1,1 +1,1 @@
-# A complete guide to ci/cd pipeline from begining
+# A complete guide to CI/CD pipeline from begining
